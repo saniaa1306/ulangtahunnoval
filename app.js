@@ -4755,24 +4755,17 @@ window.initScratchCard = function (canvasId, btnId) {
     }
 
     function getAudioCandidates(track, trackIndex) {
-        let paths = [];
-        if (trackIndex === FIRST_TRACK_INDEX) {
-            // Variasi nama untuk mengakomodasi nama file lama dan perbedaan huruf
-            // besar/kecil pada server GitHub Pages (path bersifat case-sensitive).
-            paths = [
-                'audio/AnugerahTerindah.mp3',
-                'audio/AnugrahTerindah.mp3',
-                'audio/anugerahterindah.mp3',
-                'audio/anugrahterindah.mp3',
-                'audio/Anugerah_Terindah.mp3',
-                'audio/anugerah_terindah.mp3',
-                track.src,
-                track.altSrc
-            ];
-        } else {
-            paths = [track.src, track.altSrc];
-        }
-        return [...new Set(paths.filter(Boolean))];
+        // Gunakan nama file yang benar-benar ada di folder audio milik pengguna.
+        // Jangan kirim beberapa <source> sekaligus: Safari/iPhone dapat berhenti
+        // pada sumber pertama yang 404 dan event error lama menandai lagu gagal.
+        const exactFiles = [
+            'audio/anugrahterindah.mp3',
+            'audio/orangyangsama.mp3',
+            'audio/sempurna.mp3',
+            'audio/2001x.mp3'
+        ];
+        const exactPath = exactFiles[trackIndex];
+        return [exactPath || (track && (track.altSrc || track.src))].filter(Boolean);
     }
 
     function finishMusicStart(trackIndex) {
@@ -4815,20 +4808,13 @@ window.initScratchCard = function (canvasId, btnId) {
 
         if (typeof stopAllMusic === 'function') stopAllMusic();
         audioEl.pause();
-        audioEl.removeAttribute('src');
-        audioEl.replaceChildren();
         audioEl.preload = 'auto';
         audioEl.setAttribute('playsinline', '');
         activeAudioSources = getAudioCandidates(track, safeIndex);
 
-        // Source list membuat browser mencoba nama file cadangan secara native;
-        // play() tetap dipanggil pada stack sentuhan pengguna di iPhone.
-        activeAudioSources.forEach(function (path) {
-            const source = document.createElement('source');
-            source.src = path;
-            source.type = 'audio/mpeg';
-            audioEl.appendChild(source);
-        });
+        // Pasang SATU URL MP3 yang telah dipastikan benar, bukan daftar source
+        // dengan beberapa nama tebakan. Ini menghindari Safari berhenti di 404.
+        audioEl.src = activeAudioSources[0];
 
         const progress = document.getElementById('sp-progress-fill');
         const current = document.getElementById('sp-current-time');
