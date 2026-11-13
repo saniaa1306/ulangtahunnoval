@@ -1,41 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // =========================================================================
 // 1. PENCEGAH FLASH OF UNSTYLED TEXT (FOUT)
 // =========================================================================
@@ -5182,26 +5144,28 @@ window.initScratchCard = function (canvasId, btnId) {
 // =========================================================================
 
 // =========================================================================
-// 105. POLAROID GALLERY PERFORMANCE + TAP RELIABILITY FIX
-//      Menghindari pemasangan ulang CSS/modal pada setiap pilihan foto.
-//      Foto di rak memakai decoding async dan lazy loading.
+// 105. POLAROID GALLERY HOTFIX - CLICK STABLE + RENDER RINGAN
+//      Mempertahankan alur foto, keranjang, modal, dan seluruh fitur lama.
+//      CSS/avatar/modal hanya diinisialisasi sekali. Klik foto tidak dibatalkan
+//      oleh flag drag kamera yang tertinggal.
 // =========================================================================
 (function () {
-    const ITEM_IDS = new WeakMap();
-    let nextItemId = 1;
+    const STYLE_ID = 'bm-gallery-click-fix-style';
 
-    function getItemId(item) {
-        if (!item || typeof item !== 'object') return 'missing';
-        if (!ITEM_IDS.has(item)) ITEM_IDS.set(item, nextItemId++);
-        return String(ITEM_IDS.get(item));
+    function itemKey(item, index) {
+        if (!item) return 'missing:' + index;
+        if (item.isEmpty) return 'empty:' + index;
+        return 'photo:' + String(item.url || '') + '|' + String(item.title || '');
     }
 
-    function updateCardState(card, item, index) {
+    function updateCard(card, item, index) {
         if (!card || !item) return;
         if (item.isEmpty) {
             card.className = 'bm-product-box empty-slot';
             const badge = card.querySelector('.bm-price-tag');
             if (badge) badge.textContent = 'KOSONG';
+            const label = card.querySelector('.bm-pack-label');
+            if (label) label.textContent = 'Klik Isi Foto';
             return;
         }
 
@@ -5212,14 +5176,14 @@ window.initScratchCard = function (canvasId, btnId) {
         if (badge) badge.textContent = selected ? `PILIH #${cartPos + 1}` : `#${index + 1}`;
     }
 
-    // Kartu dibuat sekali. Ketukan tidak lagi dibatalkan oleh flag hasMoved
-    // yang bisa tertinggal true setelah kamera digeser.
+    // Kartu dibuat dengan alur klik asli. Tidak memakai hasMoved sebagai
+    // syarat klik karena flag itu hanya untuk drag kamera, bukan untuk foto.
     window.createCard = function (item, index) {
         const card = document.createElement('div');
         card.dataset.bmPhotoIndex = String(index);
-        card.dataset.bmItemId = getItemId(item);
+        card.dataset.bmItemKey = itemKey(item, index);
         card.style.touchAction = 'manipulation';
-        card.style.webkitTapHighlightColor = 'transparent';
+        card.style.cursor = 'pointer';
 
         if (item.isEmpty) {
             card.className = 'bm-product-box empty-slot';
@@ -5228,57 +5192,50 @@ window.initScratchCard = function (canvasId, btnId) {
             const cartPos = bmCart.findIndex(entry => entry.index === index);
             const selected = cartPos !== -1;
             card.className = `bm-product-box ${item.pack || 'pack-red'} ${selected ? 'in-cart' : ''}`;
-
-            const badge = document.createElement('span');
-            badge.className = 'bm-price-tag';
-            badge.textContent = selected ? `PILIH #${cartPos + 1}` : `#${index + 1}`;
-
-            const img = document.createElement('img');
-            img.alt = item.title || `Kenangan #${index + 1}`;
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            img.draggable = false;
-            img.style.pointerEvents = 'none';
-            if ('fetchPriority' in img) img.fetchPriority = 'low';
-            img.onerror = function () {
-                img.onerror = null;
-                img.src = 'img/bubu1.jpeg';
-            };
-            img.src = item.url;
-
-            const label = document.createElement('div');
-            label.className = 'bm-pack-label';
-            label.textContent = item.title || `Kenangan #${index + 1}`;
-            card.append(badge, img, label);
+            card.innerHTML = `
+                <span class="bm-price-tag">${selected ? `PILIH #${cartPos + 1}` : `#${index + 1}`}</span>
+                <img src="${item.url}" alt="${item.title || `Kenangan #${index + 1}`}" decoding="async" draggable="false" onerror="this.onerror=null;this.src='img/bubu1.jpeg'">
+                <div class="bm-pack-label">${item.title || `Kenangan #${index + 1}`}</div>
+            `;
         }
 
-        card.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopPropagation();
+        // Gunakan onclick langsung agar perilakunya tetap sama seperti versi
+        // awal yang sudah pernah bekerja di perangkat pengguna.
+        card.onclick = function () {
             const currentItem = bmPhotos[index];
             if (!currentItem) return;
-
             if (currentItem.isEmpty) {
                 targetEmptySlotIdx = index;
                 openCameraModal();
             } else {
                 openPhotoDetailModal(currentItem, index);
             }
-        });
-
+        };
         return card;
     };
 
-    // Inisialisasi ruangan 3D, CSS, avatar dan modal hanya satu kali.
-    // Sesudah itu renderGallery cukup memperbarui kartu yang berubah dan badge.
+    // Inisialisasi ruangan 3D, modal dan style hanya sekali. Saat memilih foto,
+    // cukup perbarui badge/kartu yang berubah; modal tidak dibongkar ulang.
     window.renderGallery = function () {
         const leftShelf = document.getElementById('bm-left-shelf');
         const rightShelf = document.getElementById('bm-right-shelf');
         if (!leftShelf || !rightShelf) return;
 
-        if (window.__bmGalleryBaseInitialized !== true) {
+        if (window.__bmGalleryInitializedOnce !== true) {
             initAuthenticStylesAndAvatars();
-            window.__bmGalleryBaseInitialized = true;
+            window.__bmGalleryInitializedOnce = true;
+        }
+
+        if (!document.getElementById(STYLE_ID)) {
+            const style = document.createElement('style');
+            style.id = STYLE_ID;
+            style.textContent = `
+                #bm-left-shelf, #bm-right-shelf, .bm-shelf-unit { pointer-events: auto !important; }
+                .bm-product-box { pointer-events: auto !important; touch-action: manipulation !important; cursor: pointer !important; }
+                .bm-product-box > img, .bm-product-box > .bm-price-tag, .bm-product-box > .bm-pack-label,
+                .bm-product-box > svg { pointer-events: none !important; }
+            `;
+            document.head.appendChild(style);
         }
 
         function syncShelf(shelf, startIndex, endIndex) {
@@ -5288,17 +5245,16 @@ window.initScratchCard = function (canvasId, btnId) {
                 if (!item) continue;
 
                 let card = shelf.children[localIndex];
-                const itemId = getItemId(item);
-                if (!card || card.dataset.bmItemId !== itemId) {
+                const key = itemKey(item, index);
+                if (!card || card.dataset.bmItemKey !== key) {
                     const replacement = window.createCard(item, index);
                     if (card) shelf.replaceChild(replacement, card);
                     else shelf.appendChild(replacement);
                     card = replacement;
                 } else {
-                    updateCardState(card, item, index);
+                    updateCard(card, item, index);
                 }
             }
-
             while (shelf.children.length > endIndex - startIndex) {
                 shelf.removeChild(shelf.lastElementChild);
             }
@@ -5311,17 +5267,19 @@ window.initScratchCard = function (canvasId, btnId) {
         updateTransform();
     };
 
-    // Drag hanya dimulai pada area ruangan. Sentuhan pada rak foto, tombol,
-    // keranjang atau modal tidak dianggap sebagai gerakan kamera.
+    // Drag kamera hanya mulai dari lantai/dinding kosong. Sentuhan pada foto,
+    // tombol, rak, avatar, keranjang atau modal tidak pernah mengambil gesture.
+    // pan-y membiarkan scroll vertikal HP dan tetap menerima geser horizontal.
     window.initDragLook = function () {
         const viewport = document.getElementById('bm-viewport');
-        if (!viewport || viewport.dataset.bmPolaroidPointerReady === '1') return;
-        viewport.dataset.bmPolaroidPointerReady = '1';
-        viewport.style.touchAction = 'none';
+        if (!viewport || viewport.dataset.bmGalleryDragReady === '1') return;
+        viewport.dataset.bmGalleryDragReady = '1';
+        viewport.style.touchAction = 'pan-y';
 
         const ignored = [
             'button', 'input', 'select', 'textarea', 'a',
-            '.bm-product-box', '.bm-hud-controls', '.bm-avatar-switcher', '.bm-char-btn',
+            '.bm-product-box', '#bm-left-shelf', '#bm-right-shelf', '.bm-shelf-unit',
+            '.bm-hud-controls', '.bm-top-nav', '.bm-avatar-switcher', '.bm-char-btn',
             '#bm-cart-bar', '#bm-held-polaroid', '#bm-polaroid-modal',
             '#bm-photo-detail-modal', '#bm-product-modal', '.bm-modal-backdrop',
             '.bm-counter-action'
@@ -5333,44 +5291,36 @@ window.initScratchCard = function (canvasId, btnId) {
         viewport.addEventListener('pointerdown', function (event) {
             if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
             if (event.target && event.target.closest && event.target.closest(ignored)) return;
-
             activePointerId = event.pointerId;
             lastX = event.clientX;
             isDragging = true;
             hasMoved = false;
-            try { viewport.setPointerCapture(event.pointerId); } catch (error) {}
+            try { viewport.setPointerCapture(event.pointerId); } catch (err) {}
         }, { passive: true });
 
         viewport.addEventListener('pointermove', function (event) {
-            if (!isDragging || activePointerId !== event.pointerId) return;
+            if (activePointerId === null || activePointerId !== event.pointerId) return;
             const deltaX = event.clientX - lastX;
-            if (Math.abs(deltaX) < 1) return;
-
+            if (Math.abs(deltaX) < 3) return;
             hasMoved = true;
             lastX = event.clientX;
             bmCamYaw += deltaX * 0.28;
             updateTransform();
         }, { passive: true });
 
-        function finishDrag(event) {
+        function finishPointer(event) {
             if (activePointerId === null) return;
             if (event && event.pointerId !== undefined && event.pointerId !== activePointerId) return;
             isDragging = false;
             activePointerId = null;
-            // Jangan tinggalkan status drag yang membuat klik foto berikutnya ditolak.
             hasMoved = false;
         }
-
-        viewport.addEventListener('pointerup', finishDrag, { passive: true });
-        viewport.addEventListener('pointercancel', finishDrag, { passive: true });
-        viewport.addEventListener('lostpointercapture', finishDrag, { passive: true });
+        viewport.addEventListener('pointerup', finishPointer, { passive: true });
+        viewport.addEventListener('pointercancel', finishPointer, { passive: true });
+        viewport.addEventListener('lostpointercapture', finishPointer, { passive: true });
     };
 })();
 
 // =========================================================================
-// END POLAROID GALLERY PERFORMANCE + TAP RELIABILITY FIX
+// END POLAROID GALLERY HOTFIX
 // =========================================================================
-
-
-
-
