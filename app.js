@@ -1,3 +1,38 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // =========================================================================
 // 1. PENCEGAH FLASH OF UNSTYLED TEXT (FOUT)
 // =========================================================================
@@ -4938,3 +4973,211 @@ window.initScratchCard = function (canvasId, btnId) {
 // =========================================================================
 // END FINAL FIX
 // =========================================================================
+
+
+// =========================================================================
+// 105. OVERRIDE FINAL PEMUTAR MUSIK - PATH AUDIO SESUAI NAMA FILE ASLI
+//     Patch ini sengaja memakai satu URL MP3 yang pasti, bukan daftar sumber
+//     alternatif. play() dipanggil langsung dari klik pengguna agar ramah iOS.
+// =========================================================================
+(function () {
+    const exactAudioPaths = [
+        'audio/anugrahterindah.mp3',
+        'audio/orangyangsama.mp3',
+        'audio/sempurna.mp3',
+        'audio/2001x.mp3'
+    ];
+
+    if (!Array.isArray(playlistData) || !audioEl) {
+        console.error('Pemutar musik tidak menemukan playlist atau elemen audio.');
+        return;
+    }
+
+    // Samakan sumber playlist dengan nama file yang tampak pada folder audio.
+    playlistData.forEach(function (track, index) {
+        if (exactAudioPaths[index]) {
+            track.src = exactAudioPaths[index];
+            track.altSrc = exactAudioPaths[index];
+        }
+    });
+
+    const firstTrackIndex = 0;
+    let musicRequestId = 0;
+
+    function musicHint(message) {
+        const hint = document.getElementById('sp-status-hint');
+        if (hint) hint.textContent = message;
+    }
+
+    function refreshMusic() {
+        try {
+            if (typeof renderPlaylistUI === 'function') renderPlaylistUI();
+        } catch (error) {
+            console.warn('Playlist UI tidak dapat diperbarui:', error);
+        }
+    }
+
+    function pauseOtherMusic() {
+        if (ytProgressInterval) {
+            clearInterval(ytProgressInterval);
+            ytProgressInterval = null;
+        }
+        try {
+            if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+        } catch (error) {}
+        usingYouTube = false;
+    }
+
+    function playExactTrack(index) {
+        const safeIndex = ((Number(index) || 0) % playlistData.length + playlistData.length) % playlistData.length;
+        const track = playlistData[safeIndex];
+        const requestId = ++musicRequestId;
+        currentTrackIdx = safeIndex;
+
+        pauseOtherMusic();
+        audioEl.pause();
+        audioEl.preload = 'auto';
+        audioEl.setAttribute('playsinline', '');
+        audioEl.setAttribute('webkit-playsinline', '');
+        audioEl.removeAttribute('crossorigin');
+
+        // Jangan memakai load() atau banyak elemen <source> sebelum play().
+        // Pada Safari iPhone, play() harus tetap dipanggil langsung dalam gesture.
+        audioEl.src = exactAudioPaths[safeIndex] || track.src;
+        try { audioEl.currentTime = 0; } catch (error) {}
+
+        const progress = document.getElementById('sp-progress-fill');
+        const current = document.getElementById('sp-current-time');
+        if (progress) progress.style.width = '0%';
+        if (current) current.textContent = '0:00';
+
+        isPlaying = false;
+        musicInitialized = false;
+        wasPlayingBeforeGame = false;
+        refreshMusic();
+        musicHint('Memuat ' + track.title + '...');
+
+        let request;
+        try {
+            // Panggilan ini berlangsung langsung dari klik amplop/playlist/Play.
+            request = audioEl.play();
+        } catch (error) {
+            handlePlayFailure(error, track, requestId);
+            return;
+        }
+
+        if (request && typeof request.then === 'function') {
+            request.then(function () {
+                if (requestId !== musicRequestId) return;
+                isPlaying = true;
+                musicInitialized = true;
+                usingYouTube = false;
+                refreshMusic();
+                musicHint('Memutar ' + track.title + ' dari 00:00');
+            }).catch(function (error) {
+                handlePlayFailure(error, track, requestId);
+            });
+        } else {
+            if (requestId === musicRequestId) {
+                isPlaying = true;
+                musicInitialized = true;
+                refreshMusic();
+                musicHint('Memutar ' + track.title + ' dari 00:00');
+            }
+        }
+    }
+
+    function handlePlayFailure(error, track, requestId) {
+        if (requestId !== musicRequestId) return;
+        isPlaying = false;
+        musicInitialized = false;
+        refreshMusic();
+        if (error && error.name === 'NotAllowedError') {
+            musicHint('Browser HP menahan audio. Ketuk tombol Play sekali untuk memulai.');
+        } else {
+            const code = audioEl && audioEl.error ? audioEl.error.code : '';
+            musicHint('Gagal memutar ' + track.title + ' (' + (error && error.name ? error.name : 'audio error') + (code ? ', kode ' + code : '') + '). Periksa file: ' + track.src);
+            console.error('Gagal memutar audio:', track.src, error, audioEl ? audioEl.error : null);
+        }
+    }
+
+    function resumeCurrentTrack() {
+        if (!audioEl || !audioEl.getAttribute('src')) {
+            playExactTrack(currentTrackIdx);
+            return;
+        }
+        let request;
+        try {
+            request = audioEl.play();
+        } catch (error) {
+            handlePlayFailure(error, playlistData[currentTrackIdx], ++musicRequestId);
+            return;
+        }
+        const requestId = ++musicRequestId;
+        if (request && typeof request.then === 'function') {
+            request.then(function () {
+                if (requestId !== musicRequestId) return;
+                isPlaying = true;
+                musicInitialized = true;
+                refreshMusic();
+                musicHint('Melanjutkan ' + playlistData[currentTrackIdx].title);
+            }).catch(function (error) {
+                handlePlayFailure(error, playlistData[currentTrackIdx], requestId);
+            });
+        } else {
+            isPlaying = true;
+            musicInitialized = true;
+            refreshMusic();
+        }
+    }
+
+    // Ganti fungsi global yang dipakai tombol, playlist, dan tombol Next/Previous.
+    window.selectAndPlayTrack = playExactTrack;
+    window.nextTrack = function () {
+        playExactTrack((currentTrackIdx + 1) % playlistData.length);
+    };
+    window.prevTrack = function () {
+        playExactTrack((currentTrackIdx - 1 + playlistData.length) % playlistData.length);
+    };
+    window.toggleMusic = function () {
+        if (isPlaying) {
+            musicRequestId++;
+            if (typeof pauseActiveMusicOnly === 'function') pauseActiveMusicOnly();
+            else audioEl.pause();
+            isPlaying = false;
+            musicHint('Musik dijeda');
+            refreshMusic();
+            return;
+        }
+        resumeCurrentTrack();
+    };
+
+    // Amplop disentuh: mulai dari lagu pertama, detik 00:00.
+    window.openMailbox = function () {
+        const mailboxEl = document.getElementById('mailbox');
+        if (mailboxEl) mailboxEl.classList.add('open');
+        if (!musicInitialized && !isPlaying) playExactTrack(firstTrackIndex);
+        setTimeout(function () {
+            if (typeof goTo === 'function') goTo('screen-pin');
+        }, 750);
+    };
+
+    // Listener ended bawaan app.js tetap dipakai; tidak menambah listener kedua
+    // agar lagu tidak lompat dua nomor sekaligus setelah selesai.
+
+    // Tampilkan lagu pertama pada UI, tetapi jangan autoplay sebelum sentuhan.
+    currentTrackIdx = firstTrackIndex;
+    isPlaying = false;
+    musicInitialized = false;
+    usingYouTube = false;
+    refreshMusic();
+    musicHint('Lagu pertama siap. Sentuh amplop atau tekan Play untuk memulai.');
+})();
+
+// =========================================================================
+// END OVERRIDE FINAL PEMUTAR MUSIK
+// =========================================================================
+
+
+
+
