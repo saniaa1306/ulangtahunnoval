@@ -1071,3 +1071,262 @@ h1, h2, h3, p, span { font-weight: 700; letter-spacing: 0.3px; }
 .btn-yes { background: #4caf50; color: white; }
 .btn-no { background: #f44336; color: white; }
 .btn-next { background: #2196f3; color: white; }
+
+/* =========================================================================
+   100. RESPONSIVE MOBILE PATCH - TAMBAHAN TANPA MENGHAPUS STYLE LAMA
+   ========================================================================= */
+
+/* Pastikan halaman mengikuti viewport aktif pada Safari/Chrome HP. */
+html,
+body {
+    width: 100%;
+    min-width: 0;
+}
+
+@supports (height: 100dvh) {
+    body {
+        min-height: 100dvh;
+    }
+}
+
+/* Font tombol Back dikembalikan lewat Caveat oleh app.js;
+   aturan ini menjaga ukuran dan bentuk tombol tetap seperti desain awal. */
+.screen .top-bar .back-btn,
+.screen .back-btn {
+    min-height: 34px;
+    line-height: 1.1;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Scroll setiap layar tetap aktif meskipun bingkai aplikasi tidak bisa scroll. */
+.screen {
+    min-height: 0;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+/* Area game/canvas menyesuaikan ukuran layar kecil. */
+
+/* Kupon gosok mengikuti lebar layar tanpa mengubah ukuran desain desktop. */
+.scratch-card-container {
+    width: min(260px, 100%);
+    max-width: 100%;
+    flex-shrink: 0;
+    touch-action: none;
+}
+
+.scratch-canvas {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    pointer-events: auto;
+}
+
+/* 3D Love Mart dan Petal Post diskalakan hanya pada layar sempit. */
+
+@media screen and (max-width: 600px) {
+    body {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        overflow: hidden;
+        align-items: stretch;
+        justify-content: center;
+    }
+
+    #app-container {
+        width: 100%;
+        max-width: 414px;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+        max-height: none;
+        margin: 0 auto;
+        padding: 10px;
+        overflow: hidden;
+        box-shadow: none;
+    }
+
+    #paper-mat {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        overflow: hidden !important;
+    }
+
+    .screen {
+        top: 0;
+        bottom: 0;
+        min-height: 0;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #screen-intro,
+    #screen-pin,
+    #screen-cake {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+
+    #screen-menu {
+        padding-top: 14px;
+        padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    }
+
+    #screen-flowers {
+        padding-left: 8px;
+        padding-right: 8px;
+        padding-bottom: calc(40px + env(safe-area-inset-bottom));
+    }
+
+    #screen-game-birds,
+    #screen-game-catch {
+        padding-top: 45px;
+        padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+
+    #screen-coupons {
+        padding-top: 54px;
+        padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    }
+
+
+    /* 3D Love Mart: kecilkan ruang 3D pada layar sempit tanpa mengubah kamera. */
+    @supports (scale: 0.9) {
+        #bm-world {
+            scale: 0.78;
+            transform-origin: center center;
+        }
+    }
+
+    /* Canvas permainan menjaga rasio dan mengikuti lebar perangkat. */
+    .birds-canvas-wrap {
+        width: min(100%, 310px);
+        height: auto;
+        aspect-ratio: 7 / 5;
+        flex: 0 0 auto;
+    }
+
+    .birds-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+        touch-action: none;
+    }
+
+    /* Toko bunga menggunakan kolom fleksibel agar tidak melewati tepi HP. */
+    .workbench-grid {
+        width: 100%;
+        min-width: 0;
+        gap: 3px;
+        grid-template-columns: minmax(76px, 0.9fr) minmax(0, 1fr) minmax(64px, 0.75fr);
+    }
+
+    .vintage-register,
+    .center-bouquet-stage,
+    .right-personalize-station {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .vintage-register {
+        width: 100%;
+    }
+
+    #love-coupons-mission-list,
+    #final-coupon-reward-box {
+        flex-shrink: 0;
+        max-width: 100%;
+    }
+
+    #final-coupon-reward-box {
+        margin-bottom: 8px;
+    }
+
+    #gx-section {
+        max-width: 100%;
+    }
+
+    .birds-canvas-wrap {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .workbench-grid {
+        width: 100%;
+        gap: 3px;
+        grid-template-columns: minmax(76px, 0.9fr) minmax(0, 1fr) minmax(64px, 0.75fr);
+    }
+
+    .reg-top-hood {
+        width: min(96px, 100%);
+    }
+
+    .bunch-svg-wrap {
+        max-width: 100%;
+    }
+
+    .back-btn {
+        max-width: max-content;
+    }
+}
+
+@media screen and (max-width: 360px) {
+    @supports (scale: 0.9) {
+        #bm-world { scale: 0.72; }
+    }
+
+    #app-container {
+        padding: 7px;
+    }
+
+    .screen {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+
+    #screen-game-birds,
+    #screen-game-catch {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    .workbench-grid {
+        grid-template-columns: minmax(70px, 0.85fr) minmax(0, 1fr) minmax(58px, 0.7fr);
+        gap: 2px;
+    }
+
+    .bunch-svg-wrap {
+        width: 100%;
+    }
+}
+
+/* HP posisi landscape: gunakan tinggi aktual, bukan batas 896px desktop. */
+@media screen and (max-width: 900px) and (max-height: 500px) {
+    body,
+    #app-container {
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+    }
+
+    .screen {
+        padding-top: 42px;
+        padding-bottom: 14px;
+    }
+
+    #screen-gallery .bm-top-nav {
+        top: 6px;
+    }
+}
+
+/* =========================================================================
+   END RESPONSIVE MOBILE PATCH
+   ========================================================================= */

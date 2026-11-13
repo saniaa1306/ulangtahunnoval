@@ -3956,3 +3956,513 @@ window.openCouponKadoBox = function() {
         };
     }
 })();
+
+// =========================================================================
+// 100. PERBAIKAN MOBILE: LOVE CATAPULT + SCRATCH COUPON
+//     Ditambahkan tanpa menghapus fungsi lama.
+// =========================================================================
+(function () {
+    const birdFix = {
+        rafId: 0,
+        resetTimer: 0,
+        boundCanvas: null,
+        listenersBound: false,
+        activePointerId: null
+    };
+
+    function stopBirdAnimation() {
+        birdGameRunning = false;
+
+        if (birdFix.rafId) {
+            cancelAnimationFrame(birdFix.rafId);
+            birdFix.rafId = 0;
+        }
+
+        if (birdFix.resetTimer) {
+            clearTimeout(birdFix.resetTimer);
+            birdFix.resetTimer = 0;
+        }
+
+        birdFix.activePointerId = null;
+        if (bird && bird.isDragging) bird.isDragging = false;
+    }
+
+    function readBirdPointerPosition(e) {
+        if (!birdCanvas) return null;
+
+        const rect = birdCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+
+        let clientX;
+        let clientY;
+
+        if (e.touches && e.touches.length) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        if (typeof clientX !== 'number' || typeof clientY !== 'number') return null;
+
+        // Koordinat sentuhan disesuaikan dengan ukuran asli canvas,
+        // bukan hanya posisi CSS canvas di layar HP.
+        return {
+            x: (clientX - rect.left) * (birdCanvas.width / rect.width),
+            y: (clientY - rect.top) * (birdCanvas.height / rect.height)
+        };
+    }
+
+    function bindBirdPointerEvents() {
+        if (!birdCanvas || birdFix.boundCanvas === birdCanvas) return;
+
+        birdFix.boundCanvas = birdCanvas;
+        birdCanvas.style.touchAction = 'none';
+
+        if ('PointerEvent' in window) {
+            birdCanvas.addEventListener('pointerdown', startDrag, { passive: false });
+
+            if (!birdFix.listenersBound) {
+                window.addEventListener('pointermove', dragMove, { passive: false });
+                window.addEventListener('pointerup', releaseDrag, { passive: true });
+                window.addEventListener('pointercancel', function () {
+                    if (bird && bird.isDragging) {
+                        bird.isDragging = false;
+                        birdFix.activePointerId = null;
+                        resetBirdShot();
+                    }
+                }, { passive: true });
+                birdFix.listenersBound = true;
+            }
+        } else {
+            birdCanvas.addEventListener('mousedown', startDrag);
+            birdCanvas.addEventListener('touchstart', startDrag, { passive: false });
+
+            if (!birdFix.listenersBound) {
+                window.addEventListener('mousemove', dragMove, { passive: false });
+                window.addEventListener('mouseup', releaseDrag);
+                window.addEventListener('touchmove', dragMove, { passive: false });
+                window.addEventListener('touchend', releaseDrag, { passive: true });
+                birdFix.listenersBound = true;
+            }
+        }
+    }
+
+    // Override fungsi lama agar setiap pengulangan hanya memiliki SATU loop animasi.
+    window.initBirdGame = function () {
+        stopBirdAnimation();
+
+        birdCanvas = document.getElementById('bird-canvas');
+        if (!birdCanvas) return;
+
+        birdCtx = birdCanvas.getContext('2d');
+        if (!birdCtx) return;
+
+        birdCanvas.width = 280;
+        birdCanvas.height = 200;
+
+        birdsLeft = 10;
+        targets = [
+            { x: 180, y: 55, w: 26, h: 26, alive: true },
+            { x: 205, y: 100, w: 26, h: 26, alive: true },
+            { x: 180, y: 145, w: 26, h: 26, alive: true }
+        ];
+
+        bindBirdPointerEvents();
+        resetBirdShot();
+
+        birdGameRunning = true;
+        birdFix.rafId = requestAnimationFrame(updateBirdGame);
+    };
+
+    window.resetBirdShot = function () {
+        bird = {
+            x: 50, y: 150, vx: 0, vy: 0,
+            radius: 13, isDragging: false, isFlying: false
+        };
+
+        birdFix.activePointerId = null;
+
+        const countEl = document.getElementById('bird-count');
+        const statusEl = document.getElementById('bird-status');
+        const overlayEl = document.getElementById('bird-win-overlay');
+
+        if (countEl) countEl.innerText = birdsLeft;
+        if (statusEl) statusEl.innerText = 'Tarik burung & hancurkan target!';
+        if (overlayEl) overlayEl.classList.remove('show');
+    };
+
+    window.getCanvasPos = readBirdPointerPosition;
+
+    window.startDrag = function (e) {
+        if (!birdGameRunning || bird.isFlying || birdsLeft <= 0) return;
+
+        const pos = readBirdPointerPosition(e);
+        if (!pos) return;
+
+        if (Math.hypot(pos.x - sling.x, pos.y - sling.y) < 35) {
+            if (e.cancelable) e.preventDefault();
+            bird.isDragging = true;
+            birdFix.activePointerId = (typeof e.pointerId === 'number') ? e.pointerId : null;
+        }
+    };
+
+    window.dragMove = function (e) {
+        if (!birdGameRunning || !bird.isDragging) return;
+
+        if (
+            birdFix.activePointerId !== null &&
+            typeof e.pointerId === 'number' &&
+            e.pointerId !== birdFix.activePointerId
+        ) return;
+
+        const pos = readBirdPointerPosition(e);
+        if (!pos) return;
+
+        if (e.cancelable) e.preventDefault();
+
+        let dx = pos.x - sling.x;
+        let dy = pos.y - sling.y;
+        const dist = Math.hypot(dx, dy);
+
+        if (dist > 55) {
+            dx = (dx / dist) * 55;
+            dy = (dy / dist) * 55;
+        }
+
+        bird.x = sling.x + dx;
+        bird.y = sling.y + dy;
+    };
+
+    window.releaseDrag = function (e) {
+        if (!bird || !bird.isDragging) return;
+
+        if (
+            birdFix.activePointerId !== null &&
+            e && typeof e.pointerId === 'number' &&
+            e.pointerId !== birdFix.activePointerId
+        ) return;
+
+        bird.isDragging = false;
+        bird.isFlying = true;
+        birdFix.activePointerId = null;
+
+        birdsLeft = Math.max(0, birdsLeft - 1);
+
+        const countEl = document.getElementById('bird-count');
+        if (countEl) countEl.innerText = birdsLeft;
+
+        bird.vx = (sling.x - bird.x) * 0.28;
+        bird.vy = (sling.y - bird.y) * 0.28;
+    };
+
+    window.updateBirdGame = function () {
+        if (!birdGameRunning || !birdCanvas || !birdCtx) {
+            birdFix.rafId = 0;
+            return;
+        }
+
+        if (bird.isFlying) {
+            bird.x += bird.vx;
+            bird.y += bird.vy;
+            bird.vy += 0.25;
+
+            targets.forEach(t => {
+                if (
+                    t.alive &&
+                    bird.x + bird.radius > t.x &&
+                    bird.x - bird.radius < t.x + t.w &&
+                    bird.y + bird.radius > t.y &&
+                    bird.y - bird.radius < t.y + t.h
+                ) {
+                    t.alive = false;
+                }
+            });
+
+            if (targets.length && targets.every(t => !t.alive)) {
+                bird.isFlying = false;
+                birdGameRunning = false;
+                birdFix.rafId = 0;
+
+                if (typeof window.unlockGameMission === 'function') {
+                    window.unlockGameMission('birds');
+                }
+
+                const overlayEl = document.getElementById('bird-win-overlay');
+                const statusEl = document.getElementById('bird-status');
+                if (overlayEl) overlayEl.classList.add('show');
+                if (statusEl) statusEl.innerText = 'Hebat! Semua hati hancur!';
+                return;
+            }
+
+            const margin = bird.radius + 8;
+            const birdLeftPlayfield =
+                bird.x > birdCanvas.width + margin ||
+                bird.x < -margin ||
+                bird.y > birdCanvas.height + margin ||
+                bird.y < -margin;
+
+            if (birdLeftPlayfield) {
+                bird.isFlying = false;
+
+                const statusEl = document.getElementById('bird-status');
+
+                if (birdsLeft > 0) {
+                    if (statusEl) statusEl.innerText = 'Lanjut burung berikutnya...';
+
+                    if (birdFix.resetTimer) clearTimeout(birdFix.resetTimer);
+                    birdFix.resetTimer = setTimeout(() => {
+                        birdFix.resetTimer = 0;
+                        if (birdGameRunning) resetBirdShot();
+                    }, 500);
+                } else {
+                    birdGameRunning = false;
+                    birdFix.rafId = 0;
+                    if (statusEl) statusEl.innerText = 'Kesempatan habis! Mengulang...';
+
+                    if (birdFix.resetTimer) clearTimeout(birdFix.resetTimer);
+                    birdFix.resetTimer = setTimeout(() => {
+                        birdFix.resetTimer = 0;
+                        const screen = document.getElementById('screen-game-birds');
+                        if (screen && screen.classList.contains('active')) {
+                            initBirdGame();
+                        }
+                    }, 1100);
+                    return;
+                }
+            }
+        }
+
+        drawBirdGame();
+
+        if (birdGameRunning) {
+            birdFix.rafId = requestAnimationFrame(updateBirdGame);
+        } else {
+            birdFix.rafId = 0;
+        }
+    };
+
+    // Hentikan loop ketika pemain keluar dari layar Love Catapult.
+    const previousGoToForBirdFix = window.goTo;
+    if (typeof previousGoToForBirdFix === 'function' && !window.__birdGoToWrapped) {
+        window.__birdGoToWrapped = true;
+        window.goTo = function (screenId) {
+            if (screenId !== 'screen-game-birds') {
+                stopBirdAnimation();
+            }
+            return previousGoToForBirdFix.apply(this, arguments);
+        };
+    }
+})();
+
+
+// =========================================================================
+// 101. SCRATCH CARD RAMAH HP
+//     Pointer Events, koordinat responsif, dan tidak menimpa handler global.
+// =========================================================================
+window.initScratchCard = function (canvasId, btnId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const targetBtn = document.getElementById(btnId);
+
+    // Jangan menggambar ulang lapisan kupon setiap kali layar dirender.
+    if (canvas.dataset.scratchInitialized === 'true') {
+        if (canvas.dataset.scratchDone === 'true' && targetBtn) {
+            targetBtn.style.display = (canvasId === 'scratch-canvas-master') ? 'block' : 'flex';
+        }
+        return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.dataset.scratchInitialized = 'true';
+    canvas.width = 260;
+    canvas.height = 95;
+    canvas.style.touchAction = 'none';
+
+    const totalSamples = Math.ceil((canvas.width * canvas.height * 4) / 32);
+    let isScratching = false;
+    let moveCounter = 0;
+    let lastPoint = null;
+
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#c0c0c0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#555';
+    ctx.font = "bold 16px 'Comic Sans MS','Chalkboard SE',sans-serif";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Gesek / Gosok Disini', canvas.width / 2, canvas.height / 2);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 44;
+
+    function getScratchPoint(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+
+        let clientX;
+        let clientY;
+
+        if (e.touches && e.touches.length) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else if (e.changedTouches && e.changedTouches.length) {
+            clientX = e.changedTouches[0].clientX;
+            clientY = e.changedTouches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        if (typeof clientX !== 'number' || typeof clientY !== 'number') return null;
+
+        return {
+            x: (clientX - rect.left) * (canvas.width / rect.width),
+            y: (clientY - rect.top) * (canvas.height / rect.height)
+        };
+    }
+
+    function finishScratch() {
+        if (canvas.dataset.scratchDone === 'true') return;
+
+        canvas.dataset.scratchDone = 'true';
+        isScratching = false;
+        lastPoint = null;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        canvas.style.pointerEvents = 'none';
+
+        if (canvasId === 'scratch-canvas-master') {
+            window.masterCouponScratched = true;
+        }
+
+        if (targetBtn) {
+            targetBtn.style.display = (canvasId === 'scratch-canvas-master') ? 'block' : 'flex';
+        }
+
+        // Perbarui daftar misi/kupon dan biarkan indikator kado ikut terbarui.
+        if (typeof window.renderLoveCouponsScreen === 'function') {
+            window.renderLoveCouponsScreen();
+        }
+
+        window.dispatchEvent(new Event('loveCouponScratchComplete'));
+    }
+
+    function checkScratchProgress() {
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let transparentSamples = 0;
+        let sampleCount = 0;
+
+        // Baca setiap 8 piksel agar tetap ringan di Safari iPhone.
+        for (let i = 3; i < imageData.length; i += 32) {
+            sampleCount++;
+            if (imageData[i] < 10) transparentSamples++;
+        }
+
+        if (sampleCount && transparentSamples / Math.min(sampleCount, totalSamples) > 0.40) {
+            finishScratch();
+        }
+    }
+
+    function scratchStart(e) {
+        if (canvas.dataset.scratchDone === 'true') return;
+
+        const point = getScratchPoint(e);
+        if (!point) return;
+
+        if (e.cancelable) e.preventDefault();
+
+        isScratching = true;
+        lastPoint = point;
+        moveCounter = 0;
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 22, 0, Math.PI * 2);
+        ctx.fill();
+
+        checkScratchProgress();
+
+        if (e.pointerId !== undefined && canvas.setPointerCapture) {
+            try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+    }
+
+    function scratchMove(e) {
+        if (!isScratching || canvas.dataset.scratchDone === 'true') return;
+
+        const point = getScratchPoint(e);
+        if (!point) return;
+
+        if (e.cancelable) e.preventDefault();
+
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+
+        if (lastPoint) {
+            ctx.moveTo(lastPoint.x, lastPoint.y);
+            ctx.lineTo(point.x, point.y);
+            ctx.stroke();
+        } else {
+            ctx.arc(point.x, point.y, 22, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        lastPoint = point;
+        moveCounter++;
+
+        if (moveCounter % 4 === 0) checkScratchProgress();
+    }
+
+    function scratchEnd() {
+        isScratching = false;
+        lastPoint = null;
+    }
+
+    if ('PointerEvent' in window) {
+        canvas.addEventListener('pointerdown', scratchStart, { passive: false });
+        canvas.addEventListener('pointermove', scratchMove, { passive: false });
+        canvas.addEventListener('pointerup', scratchEnd, { passive: true });
+        canvas.addEventListener('pointercancel', scratchEnd, { passive: true });
+        canvas.addEventListener('lostpointercapture', scratchEnd, { passive: true });
+    } else {
+        canvas.addEventListener('mousedown', scratchStart);
+        canvas.addEventListener('mousemove', scratchMove);
+        window.addEventListener('mouseup', scratchEnd);
+
+        canvas.addEventListener('touchstart', scratchStart, { passive: false });
+        canvas.addEventListener('touchmove', scratchMove, { passive: false });
+        window.addEventListener('touchend', scratchEnd, { passive: true });
+        window.addEventListener('touchcancel', scratchEnd, { passive: true });
+    }
+};
+
+
+// =========================================================================
+// 102. PULIHKAN FONT TULIS TANGAN PADA SEMUA TOMBOL BACK
+// =========================================================================
+(function () {
+    function restoreBackButtonFont() {
+        document.querySelectorAll('#app-container .back-btn').forEach((button) => {
+            button.style.setProperty('font-family', "'Caveat', cursive", 'important');
+            button.style.setProperty('font-size', '20px', 'important');
+            button.style.setProperty('font-weight', '700', 'important');
+            button.style.setProperty('letter-spacing', '0', 'important');
+        });
+    }
+
+    restoreBackButtonFont();
+    document.addEventListener('DOMContentLoaded', restoreBackButtonFont);
+})();
+
+// =========================================================================
+// END PERBAIKAN MOBILE
+// =========================================================================

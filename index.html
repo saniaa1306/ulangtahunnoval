@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,700&family=Quicksand:wght@500;600;700&display=block" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <link rel="stylesheet" href="style.css?v=1794573198">
+    <link rel="stylesheet" href="style.css?v=mobile-fix-20261114">
 
 <style id="bubu-dudu-game-font-override">
     /* Ganti font teks di Game, Love Coupons, Kalkulator PIN, Our Journey, & Secret Letter ke font percakapan Bubu Dudu TANPA merusak ikon Phosphor (<i>) */
@@ -774,18 +774,24 @@ html.gx-comic .gx-force-comic:not(#gx-x) { font-family: 'Comic Sans MS', 'Chalkb
             <h2 class="pin-title">Enter Passcode</h2>
             <p class="pin-subtitle">Clue: Tanggal Jadian Kita</p>
             <div class="pin-dots">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>            </div>
+                                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
             <div class="numpad">
                                     <button class="num-btn hand-drawn-box" onclick="addPin(1)">1</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(2)">2</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(3)">3</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(4)">4</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(5)">5</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(6)">6</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(7)">7</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(8)">8</button>
-                                    <button class="num-btn hand-drawn-box" onclick="addPin(9)">9</button>
-                                <button class="num-btn hand-drawn-box" onclick="clearPin()"><i class="ph-bold ph-backspace" style="font-size: 22px;"></i></button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(2)">2</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(3)">3</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(4)">4</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(5)">5</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(6)">6</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(7)">7</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(8)">8</button>
+                    <button class="num-btn hand-drawn-box" onclick="addPin(9)">9</button>
+                <button class="num-btn hand-drawn-box" onclick="clearPin()"><i class="ph-bold ph-backspace" style="font-size: 22px;"></i></button>
                 <button class="num-btn hand-drawn-box" onclick="addPin(0)">0</button>
                 <div></div>
             </div>
@@ -1131,137 +1137,132 @@ html.gx-comic .gx-force-comic:not(#gx-x) { font-family: 'Comic Sans MS', 'Chalkb
 
             <div class="quest-map-container">
                 <div class="quest-road-line"></div>
-                                    <div class="quest-level-row">
-                        <div class="quest-node-circle ">
-                            <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
-                            <span style="font-size: 0.95rem; line-height: 1.1;">01</span>
+                <div class="quest-level-row">
+                    <div class="quest-node-circle">
+                        <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
+                        <span style="font-size: 0.95rem; line-height: 1.1;">01</span>
+                    </div>
+                    <div class="quest-stage-card">
+                        <div class="quest-stage-top">
+                            <span class="quest-stage-badge">STAGE 1 CLEARED</span>
+                            <span class="quest-stage-date">23 Agu 2023</span>
                         </div>
-                        <div class="quest-stage-card ">
-                            <div class="quest-stage-top">
-                                <span class="quest-stage-badge ">
-                                    STAGE 1 CLEARED                                </span>
-                                <span class="quest-stage-date">23 Agu 2023</span>
+                        <h3 class="quest-stage-title">
+                            <img src="https://emojicdn.elk.sh/%F0%9F%92%AC?style=apple" width="16" height="16" style="vertical-align:middle;">
+                            Awal Chat
+                        </h3>
+                        <p class="quest-stage-desc">Awal Noval chat aku.</p>
+                        <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 2px;">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
                             </div>
-                            <h3 class="quest-stage-title">
-                                <img src="https://emojicdn.elk.sh/💬?style=apple" width="16" height="16" style="vertical-align:middle;">
-                                Awal Chat                            </h3>
-                            <p class="quest-stage-desc">Awal Noval chat aku.</p>
-                            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; gap: 2px;">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                </div>
-                                <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">
-                                    +1000 LOVE XP                                </span>
-                            </div>
+                            <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">+1000 LOVE XP</span>
                         </div>
                     </div>
-                                    <div class="quest-level-row">
-                        <div class="quest-node-circle ">
-                            <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
-                            <span style="font-size: 0.95rem; line-height: 1.1;">02</span>
+                </div>
+                <div class="quest-level-row">
+                    <div class="quest-node-circle">
+                        <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
+                        <span style="font-size: 0.95rem; line-height: 1.1;">02</span>
+                    </div>
+                    <div class="quest-stage-card">
+                        <div class="quest-stage-top">
+                            <span class="quest-stage-badge">STAGE 2 CLEARED</span>
+                            <span class="quest-stage-date">8 Apr 2024</span>
                         </div>
-                        <div class="quest-stage-card ">
-                            <div class="quest-stage-top">
-                                <span class="quest-stage-badge ">
-                                    STAGE 2 CLEARED                                </span>
-                                <span class="quest-stage-date">8 Apr 2024</span>
+                        <h3 class="quest-stage-title">
+                            <img src="https://emojicdn.elk.sh/%F0%9F%92%96?style=apple" width="16" height="16" style="vertical-align:middle;">
+                            Awal Pacaran
+                        </h3>
+                        <p class="quest-stage-desc">Awal kita pacaran.</p>
+                        <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 2px;">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
                             </div>
-                            <h3 class="quest-stage-title">
-                                <img src="https://emojicdn.elk.sh/💖?style=apple" width="16" height="16" style="vertical-align:middle;">
-                                Awal Pacaran                            </h3>
-                            <p class="quest-stage-desc">Awal kita pacaran.</p>
-                            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; gap: 2px;">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                </div>
-                                <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">
-                                    +1000 LOVE XP                                </span>
-                            </div>
+                            <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">+1000 LOVE XP</span>
                         </div>
                     </div>
-                                    <div class="quest-level-row">
-                        <div class="quest-node-circle ">
-                            <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
-                            <span style="font-size: 0.95rem; line-height: 1.1;">03</span>
+                </div>
+                <div class="quest-level-row">
+                    <div class="quest-node-circle">
+                        <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
+                        <span style="font-size: 0.95rem; line-height: 1.1;">03</span>
+                    </div>
+                    <div class="quest-stage-card">
+                        <div class="quest-stage-top">
+                            <span class="quest-stage-badge">STAGE 3 CLEARED</span>
+                            <span class="quest-stage-date">17 Apr 2024</span>
                         </div>
-                        <div class="quest-stage-card ">
-                            <div class="quest-stage-top">
-                                <span class="quest-stage-badge ">
-                                    STAGE 3 CLEARED                                </span>
-                                <span class="quest-stage-date">17 Apr 2024</span>
+                        <h3 class="quest-stage-title">
+                            <img src="https://emojicdn.elk.sh/%F0%9F%8D%9C?style=apple" width="16" height="16" style="vertical-align:middle;">
+                            First Date
+                        </h3>
+                        <p class="quest-stage-desc">First date ke Toha, habis aku pulang kerja.</p>
+                        <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 2px;">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
                             </div>
-                            <h3 class="quest-stage-title">
-                                <img src="https://emojicdn.elk.sh/🍜?style=apple" width="16" height="16" style="vertical-align:middle;">
-                                First Date                            </h3>
-                            <p class="quest-stage-desc">First date ke Toha, habis aku pulang kerja.</p>
-                            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; gap: 2px;">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                </div>
-                                <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">
-                                    +1000 LOVE XP                                </span>
-                            </div>
+                            <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">+1000 LOVE XP</span>
                         </div>
                     </div>
-                                    <div class="quest-level-row">
-                        <div class="quest-node-circle ">
-                            <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
-                            <span style="font-size: 0.95rem; line-height: 1.1;">04</span>
+                </div>
+                <div class="quest-level-row">
+                    <div class="quest-node-circle">
+                        <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
+                        <span style="font-size: 0.95rem; line-height: 1.1;">04</span>
+                    </div>
+                    <div class="quest-stage-card">
+                        <div class="quest-stage-top">
+                            <span class="quest-stage-badge">STAGE 4 CLEARED</span>
+                            <span class="quest-stage-date">8 Apr 2025</span>
                         </div>
-                        <div class="quest-stage-card ">
-                            <div class="quest-stage-top">
-                                <span class="quest-stage-badge ">
-                                    STAGE 4 CLEARED                                </span>
-                                <span class="quest-stage-date">8 Apr 2025</span>
+                        <h3 class="quest-stage-title">
+                            <img src="https://emojicdn.elk.sh/%F0%9F%8E%82?style=apple" width="16" height="16" style="vertical-align:middle;">
+                            1 Tahun Anniv
+                        </h3>
+                        <p class="quest-stage-desc">1 tahun anniv: beli kue, makan, belanja, dan photobooth.</p>
+                        <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 2px;">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
                             </div>
-                            <h3 class="quest-stage-title">
-                                <img src="https://emojicdn.elk.sh/🎂?style=apple" width="16" height="16" style="vertical-align:middle;">
-                                1 Tahun Anniv                            </h3>
-                            <p class="quest-stage-desc">1 tahun anniv: beli kue, makan, belanja, dan photobooth.</p>
-                            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; gap: 2px;">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                </div>
-                                <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">
-                                    +1000 LOVE XP                                </span>
-                            </div>
+                            <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">+1000 LOVE XP</span>
                         </div>
                     </div>
-                                    <div class="quest-level-row">
-                        <div class="quest-node-circle ">
-                            <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
-                            <span style="font-size: 0.95rem; line-height: 1.1;">05</span>
+                </div>
+                <div class="quest-level-row">
+                    <div class="quest-node-circle">
+                        <span style="font-size: 0.6rem; line-height: 1;">LVL</span>
+                        <span style="font-size: 0.95rem; line-height: 1.1;">05</span>
+                    </div>
+                    <div class="quest-stage-card">
+                        <div class="quest-stage-top">
+                            <span class="quest-stage-badge">STAGE 5 CLEARED</span>
+                            <span class="quest-stage-date">8 Apr 2026</span>
                         </div>
-                        <div class="quest-stage-card ">
-                            <div class="quest-stage-top">
-                                <span class="quest-stage-badge ">
-                                    STAGE 5 CLEARED                                </span>
-                                <span class="quest-stage-date">8 Apr 2026</span>
+                        <h3 class="quest-stage-title">
+                            <img src="https://emojicdn.elk.sh/%F0%9F%8F%B9?style=apple" width="16" height="16" style="vertical-align:middle;">
+                            2 Tahun Anniv
+                        </h3>
+                        <p class="quest-stage-desc">2 tahun anniv: Sania bikin kue, ke Cibuntu berenang dan panahan.</p>
+                        <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; gap: 2px;">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
+                                <img src="https://emojicdn.elk.sh/%E2%AD%90?style=apple" width="13" height="13">
                             </div>
-                            <h3 class="quest-stage-title">
-                                <img src="https://emojicdn.elk.sh/🏹?style=apple" width="16" height="16" style="vertical-align:middle;">
-                                2 Tahun Anniv                            </h3>
-                            <p class="quest-stage-desc">2 tahun anniv: Sania bikin kue, ke Cibuntu berenang dan panahan.</p>
-                            <div style="margin-top: 6px; display: flex; align-items: center; justify-content: space-between;">
-                                <div style="display: flex; gap: 2px;">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                    <img src="https://emojicdn.elk.sh/⭐?style=apple" width="13" height="13">
-                                </div>
-                                <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">
-                                    +1000 LOVE XP                                </span>
-                            </div>
+                            <span style="font-size: 0.68rem; font-weight: 900; color: #16a34a;">+1000 LOVE XP</span>
                         </div>
                     </div>
-                            </div>
+                </div>
+            </div>
         </div>
 
         <div id="screen-coupons" class="screen">
@@ -1740,47 +1741,47 @@ html.gx-comic .gx-force-comic:not(#gx-x) { font-family: 'Comic Sans MS', 'Chalkb
                     </div>
                     <div class="receipt-divider"></div>
 
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">01x</span>
-                            <span class="receipt-item-desc">Your smile brightens my darkest days.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">02x</span>
-                            <span class="receipt-item-desc">I love the way you laugh at my silly jokes.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">03x</span>
-                            <span class="receipt-item-desc">Every moment with you is a treasure.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">04x</span>
-                            <span class="receipt-item-desc">You make ordinary days extraordinary.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">05x</span>
-                            <span class="receipt-item-desc">Your kindness inspires me every day.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">06x</span>
-                            <span class="receipt-item-desc">I fall in love with you more each day.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">07x</span>
-                            <span class="receipt-item-desc">You are my safe place.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                                            <div class="receipt-item-row">
-                            <span class="receipt-item-qty">08x</span>
-                            <span class="receipt-item-desc">I cherish our late-night conversations.</span>
-                            <span class="receipt-item-price">100% ♥</span>
-                        </div>
-                    
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">01x</span>
+                        <span class="receipt-item-desc">Your smile brightens my darkest days.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">02x</span>
+                        <span class="receipt-item-desc">I love the way you laugh at my silly jokes.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">03x</span>
+                        <span class="receipt-item-desc">Every moment with you is a treasure.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">04x</span>
+                        <span class="receipt-item-desc">You make ordinary days extraordinary.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">05x</span>
+                        <span class="receipt-item-desc">Your kindness inspires me every day.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">06x</span>
+                        <span class="receipt-item-desc">I fall in love with you more each day.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">07x</span>
+                        <span class="receipt-item-desc">You are my safe place.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span class="receipt-item-qty">08x</span>
+                        <span class="receipt-item-desc">I cherish our late-night conversations.</span>
+                        <span class="receipt-item-price">100% ♥</span>
+                    </div>
+
                     <div class="receipt-divider-double"></div>
                     <div class="receipt-totals-row">
                         <span>ITEM COUNT</span>
@@ -1860,55 +1861,68 @@ html.gx-comic .gx-force-comic:not(#gx-x) { font-family: 'Comic Sans MS', 'Chalkb
             <div class="top-bar"><button class="back-btn" onclick="goTo('screen-menu')"><i class="ph-bold ph-arrow-left"></i> Back</button></div>
             <h2 class="pin-title" style="margin-bottom: 10px;">Match The Icons</h2>
             <div class="memory-grid" id="memory-board">
-                                    <div class="m-card" data-img="img/dudu1.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/dudu1.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/bubu2.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/bubu2.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/dudu3.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/dudu3.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/bubu1.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/bubu1.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/dudu1.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/dudu1.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/dudu3.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/dudu3.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/bubu1.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/bubu1.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/bubu2.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/bubu2.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/bubu3.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/bubu3.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/bubu3.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/bubu3.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/dudu2.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/dudu2.jpeg" alt="Bubu Dudu">
-                    </div>
-                                    <div class="m-card" data-img="img/dudu2.jpeg" onclick="flipMemoryCard(this)">
-                        <i class="ph-bold ph-question m-cover"></i>
-                        <img src="img/dudu2.jpeg" alt="Bubu Dudu">
-                    </div>
-                            </div>
+                <div class="m-card" data-img="img/bubu1.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/bubu1.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/dudu2.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/dudu2.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/bubu3.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/bubu3.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/dudu1.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/dudu1.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/bubu2.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/bubu2.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/dudu3.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/dudu3.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/bubu3.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/bubu3.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/bubu1.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/bubu1.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/dudu3.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/dudu3.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/bubu2.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/bubu2.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/dudu1.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/dudu1.jpeg" alt="Bubu Dudu">
+                </div>
+                <div class="m-card" data-img="img/dudu2.jpeg" onclick="flipMemoryCard(this)">
+                    <i class="ph-bold ph-question m-cover"></i>
+                    <img src="img/dudu2.jpeg" alt="Bubu Dudu">
+                </div>
+            </div>
+            <script>
+                // Menggantikan shuffle($gameCards) dari PHP agar urutan kartu tetap acak di GitHub Pages.
+                (function () {
+                    const board = document.getElementById('memory-board');
+                    if (!board) return;
+                    const cards = Array.from(board.children);
+                    for (let i = cards.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [cards[i], cards[j]] = [cards[j], cards[i]];
+                    }
+                    cards.forEach(card => board.appendChild(card));
+                })();
+            </script>
             <div class="match-overlay" id="match-win-overlay">
                 <img src="https://emojicdn.elk.sh/🏆?style=apple" width="42" height="42" style="margin-bottom: 4px;">
                 <h3 style="font-size: 1.8rem; margin-bottom: 4px;">Match Card Selesai! <img src="https://emojicdn.elk.sh/🔓?style=apple" width="20" height="20" style="vertical-align:middle;"></h3>
@@ -2179,7 +2193,7 @@ html.gx-comic .gx-force-comic:not(#gx-x) { font-family: 'Comic Sans MS', 'Chalkb
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="app.js?v=1794573198"></script>
+<script src="app.js?v=mobile-fix-20261114"></script>
 <script>
 // Verifikasi PIN Tanggal Pacaran (080424) - Jika salah layar digelapkan & kembali ke awal seperti Bubu Dudu
 window.enteredPinString = "";
