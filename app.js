@@ -33,6 +33,9 @@
 
 
 
+
+
+
 // =========================================================================
 // 1. PENCEGAH FLASH OF UNSTYLED TEXT (FOUT)
 // =========================================================================
@@ -5176,6 +5179,196 @@ window.initScratchCard = function (canvasId, btnId) {
 
 // =========================================================================
 // END OVERRIDE FINAL PEMUTAR MUSIK
+// =========================================================================
+
+// =========================================================================
+// 105. POLAROID GALLERY PERFORMANCE + TAP RELIABILITY FIX
+//      Menghindari pemasangan ulang CSS/modal pada setiap pilihan foto.
+//      Foto di rak memakai decoding async dan lazy loading.
+// =========================================================================
+(function () {
+    const ITEM_IDS = new WeakMap();
+    let nextItemId = 1;
+
+    function getItemId(item) {
+        if (!item || typeof item !== 'object') return 'missing';
+        if (!ITEM_IDS.has(item)) ITEM_IDS.set(item, nextItemId++);
+        return String(ITEM_IDS.get(item));
+    }
+
+    function updateCardState(card, item, index) {
+        if (!card || !item) return;
+        if (item.isEmpty) {
+            card.className = 'bm-product-box empty-slot';
+            const badge = card.querySelector('.bm-price-tag');
+            if (badge) badge.textContent = 'KOSONG';
+            return;
+        }
+
+        const cartPos = bmCart.findIndex(entry => entry.index === index);
+        const selected = cartPos !== -1;
+        card.className = `bm-product-box ${item.pack || 'pack-red'} ${selected ? 'in-cart' : ''}`;
+        const badge = card.querySelector('.bm-price-tag');
+        if (badge) badge.textContent = selected ? `PILIH #${cartPos + 1}` : `#${index + 1}`;
+    }
+
+    // Kartu dibuat sekali. Ketukan tidak lagi dibatalkan oleh flag hasMoved
+    // yang bisa tertinggal true setelah kamera digeser.
+    window.createCard = function (item, index) {
+        const card = document.createElement('div');
+        card.dataset.bmPhotoIndex = String(index);
+        card.dataset.bmItemId = getItemId(item);
+        card.style.touchAction = 'manipulation';
+        card.style.webkitTapHighlightColor = 'transparent';
+
+        if (item.isEmpty) {
+            card.className = 'bm-product-box empty-slot';
+            card.innerHTML = `<span class="bm-price-tag">KOSONG</span>${SVG_ICON_CAMERA}<div class="bm-pack-label">Klik Isi Foto</div>`;
+        } else {
+            const cartPos = bmCart.findIndex(entry => entry.index === index);
+            const selected = cartPos !== -1;
+            card.className = `bm-product-box ${item.pack || 'pack-red'} ${selected ? 'in-cart' : ''}`;
+
+            const badge = document.createElement('span');
+            badge.className = 'bm-price-tag';
+            badge.textContent = selected ? `PILIH #${cartPos + 1}` : `#${index + 1}`;
+
+            const img = document.createElement('img');
+            img.alt = item.title || `Kenangan #${index + 1}`;
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.draggable = false;
+            img.style.pointerEvents = 'none';
+            if ('fetchPriority' in img) img.fetchPriority = 'low';
+            img.onerror = function () {
+                img.onerror = null;
+                img.src = 'img/bubu1.jpeg';
+            };
+            img.src = item.url;
+
+            const label = document.createElement('div');
+            label.className = 'bm-pack-label';
+            label.textContent = item.title || `Kenangan #${index + 1}`;
+            card.append(badge, img, label);
+        }
+
+        card.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const currentItem = bmPhotos[index];
+            if (!currentItem) return;
+
+            if (currentItem.isEmpty) {
+                targetEmptySlotIdx = index;
+                openCameraModal();
+            } else {
+                openPhotoDetailModal(currentItem, index);
+            }
+        });
+
+        return card;
+    };
+
+    // Inisialisasi ruangan 3D, CSS, avatar dan modal hanya satu kali.
+    // Sesudah itu renderGallery cukup memperbarui kartu yang berubah dan badge.
+    window.renderGallery = function () {
+        const leftShelf = document.getElementById('bm-left-shelf');
+        const rightShelf = document.getElementById('bm-right-shelf');
+        if (!leftShelf || !rightShelf) return;
+
+        if (window.__bmGalleryBaseInitialized !== true) {
+            initAuthenticStylesAndAvatars();
+            window.__bmGalleryBaseInitialized = true;
+        }
+
+        function syncShelf(shelf, startIndex, endIndex) {
+            for (let index = startIndex; index < endIndex; index++) {
+                const localIndex = index - startIndex;
+                const item = bmPhotos[index];
+                if (!item) continue;
+
+                let card = shelf.children[localIndex];
+                const itemId = getItemId(item);
+                if (!card || card.dataset.bmItemId !== itemId) {
+                    const replacement = window.createCard(item, index);
+                    if (card) shelf.replaceChild(replacement, card);
+                    else shelf.appendChild(replacement);
+                    card = replacement;
+                } else {
+                    updateCardState(card, item, index);
+                }
+            }
+
+            while (shelf.children.length > endIndex - startIndex) {
+                shelf.removeChild(shelf.lastElementChild);
+            }
+        }
+
+        syncShelf(leftShelf, 0, 9);
+        syncShelf(rightShelf, 9, 18);
+        switchRobloxAvatar(currentAvatar);
+        updateCartUI();
+        updateTransform();
+    };
+
+    // Drag hanya dimulai pada area ruangan. Sentuhan pada rak foto, tombol,
+    // keranjang atau modal tidak dianggap sebagai gerakan kamera.
+    window.initDragLook = function () {
+        const viewport = document.getElementById('bm-viewport');
+        if (!viewport || viewport.dataset.bmPolaroidPointerReady === '1') return;
+        viewport.dataset.bmPolaroidPointerReady = '1';
+        viewport.style.touchAction = 'none';
+
+        const ignored = [
+            'button', 'input', 'select', 'textarea', 'a',
+            '.bm-product-box', '.bm-hud-controls', '.bm-avatar-switcher', '.bm-char-btn',
+            '#bm-cart-bar', '#bm-held-polaroid', '#bm-polaroid-modal',
+            '#bm-photo-detail-modal', '#bm-product-modal', '.bm-modal-backdrop',
+            '.bm-counter-action'
+        ].join(',');
+
+        let activePointerId = null;
+        let lastX = 0;
+
+        viewport.addEventListener('pointerdown', function (event) {
+            if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (event.target && event.target.closest && event.target.closest(ignored)) return;
+
+            activePointerId = event.pointerId;
+            lastX = event.clientX;
+            isDragging = true;
+            hasMoved = false;
+            try { viewport.setPointerCapture(event.pointerId); } catch (error) {}
+        }, { passive: true });
+
+        viewport.addEventListener('pointermove', function (event) {
+            if (!isDragging || activePointerId !== event.pointerId) return;
+            const deltaX = event.clientX - lastX;
+            if (Math.abs(deltaX) < 1) return;
+
+            hasMoved = true;
+            lastX = event.clientX;
+            bmCamYaw += deltaX * 0.28;
+            updateTransform();
+        }, { passive: true });
+
+        function finishDrag(event) {
+            if (activePointerId === null) return;
+            if (event && event.pointerId !== undefined && event.pointerId !== activePointerId) return;
+            isDragging = false;
+            activePointerId = null;
+            // Jangan tinggalkan status drag yang membuat klik foto berikutnya ditolak.
+            hasMoved = false;
+        }
+
+        viewport.addEventListener('pointerup', finishDrag, { passive: true });
+        viewport.addEventListener('pointercancel', finishDrag, { passive: true });
+        viewport.addEventListener('lostpointercapture', finishDrag, { passive: true });
+    };
+})();
+
+// =========================================================================
+// END POLAROID GALLERY PERFORMANCE + TAP RELIABILITY FIX
 // =========================================================================
 
 
