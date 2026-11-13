@@ -1,3 +1,11 @@
+
+
+
+
+
+
+
+
 :root {
     --primary-blue: #1c4b82; 
     --bg-blue-light: #d6e6f7; 
@@ -1330,3 +1338,24 @@ body {
 /* =========================================================================
    END RESPONSIVE MOBILE PATCH
    ========================================================================= */
+
+
+/* FINAL FONT FIX: tombol Back mengikuti font komik yang digunakan teks aplikasi. */
+#app-container .back-btn,
+#app-container .bm-back-pill {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Quicksand', sans-serif !important;
+    font-weight: 900 !important;
+    letter-spacing: 0.2px !important;
+}
+
+/* Pada iPhone, tombol navigasi menerima ketukan tanpa mengaktifkan drag kamera. */
+#bm-viewport .bm-hud-controls,
+#bm-viewport .bm-hud-btn,
+#bm-viewport .bm-back-pill,
+#bm-viewport .bm-char-btn {
+    touch-action: manipulation !important;
+}
+
+
+
+
