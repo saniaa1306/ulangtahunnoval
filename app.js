@@ -4447,22 +4447,508 @@ window.initScratchCard = function (canvasId, btnId) {
 
 
 // =========================================================================
-// 102. PULIHKAN FONT TULIS TANGAN PADA SEMUA TOMBOL BACK
+// 102. SAMAKAN FONT SEMUA TOMBOL BACK DENGAN FONT KOMIK APLIKASI
 // =========================================================================
 (function () {
     function restoreBackButtonFont() {
-        document.querySelectorAll('#app-container .back-btn').forEach((button) => {
-            button.style.setProperty('font-family', "'Caveat', cursive", 'important');
-            button.style.setProperty('font-size', '20px', 'important');
-            button.style.setProperty('font-weight', '700', 'important');
-            button.style.setProperty('letter-spacing', '0', 'important');
+        document.querySelectorAll('#app-container .back-btn, #app-container .bm-back-pill').forEach((button) => {
+            button.style.setProperty('font-family', "'Comic Sans MS', 'Chalkboard SE', 'Quicksand', sans-serif", 'important');
+            button.style.setProperty('font-weight', '900', 'important');
+            button.style.setProperty('letter-spacing', '0.2px', 'important');
         });
     }
 
     restoreBackButtonFont();
     document.addEventListener('DOMContentLoaded', restoreBackButtonFont);
+    window.addEventListener('pageshow', restoreBackButtonFont);
 })();
 
 // =========================================================================
 // END PERBAIKAN MOBILE
+// =========================================================================
+
+// =========================================================================
+// 103. PERBAIKAN MUSIK HP: MULAI DARI LAGU PERTAMA & DETEKSI AUTOPLAY
+//     Ditambahkan tanpa menghapus fungsi playlist yang sudah ada.
+// =========================================================================
+(function () {
+    const FIRST_TRACK_INDEX = 0;
+    const isMobileMusicDevice = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+
+    function setMusicHint(message) {
+        const hint = document.getElementById('sp-status-hint');
+        if (hint) hint.textContent = message;
+    }
+
+    function refreshMusicUI() {
+        if (typeof renderPlaylistUI === 'function') {
+            try { renderPlaylistUI(); } catch (err) { console.warn('Music UI could not refresh:', err); }
+        }
+    }
+
+    function markMusicPlaying() {
+        isPlaying = true;
+        musicInitialized = true;
+        usingYouTube = false;
+        setMusicHint('Memutar Lagu...');
+        refreshMusicUI();
+    }
+
+    function markMusicBlocked(error) {
+        isPlaying = false;
+        musicInitialized = false;
+        usingYouTube = false;
+
+        if (error && error.name === 'NotAllowedError') {
+            setMusicHint('Musik diblokir browser HP. Buka menu Musik, lalu tekan tombol Play sekali.');
+        } else {
+            setMusicHint('File lagu belum bisa dimuat. Periksa nama file MP3 di folder audio GitHub.');
+        }
+        refreshMusicUI();
+    }
+
+    function playTrackSource(track, useAlternate) {
+        if (!audioEl || !track) {
+            markMusicBlocked(new Error('Audio player atau data lagu tidak ditemukan.'));
+            return;
+        }
+
+        const source = useAlternate && track.altSrc ? track.altSrc : track.src;
+        if (!source) {
+            markMusicBlocked(new Error('Alamat file audio kosong.'));
+            return;
+        }
+
+        audioEl.pause();
+        audioEl.preload = 'auto';
+        audioEl.src = source;
+        audioEl.load();
+        try { audioEl.currentTime = 0; } catch (err) { /* metadata mungkin belum tersedia */ }
+
+        isPlaying = true; // ikon play/pause mencerminkan proses mulai; akan dikoreksi jika browser menolak.
+        usingYouTube = false;
+        refreshMusicUI();
+
+        let playRequest;
+        try {
+            // play() dipanggil langsung dari sentuhan pengguna (amplop atau tombol Play).
+            playRequest = audioEl.play();
+        } catch (error) {
+            handleMusicPlayError(error, track, useAlternate);
+            return;
+        }
+
+        if (playRequest && typeof playRequest.then === 'function') {
+            playRequest.then(markMusicPlaying).catch((error) => {
+                handleMusicPlayError(error, track, useAlternate);
+            });
+        } else {
+            markMusicPlaying();
+        }
+    }
+
+    function handleMusicPlayError(error, track, usedAlternate) {
+        // NotAllowedError berarti browser meminta tindakan Play langsung dari pengguna.
+        if (error && error.name === 'NotAllowedError') {
+            markMusicBlocked(error);
+            return;
+        }
+
+        // Jika nama file utama tidak cocok huruf besar/kecil, coba nama alternatif yang sudah ada.
+        if (!usedAlternate && track.altSrc && track.altSrc !== track.src) {
+            playTrackSource(track, true);
+            return;
+        }
+
+        isPlaying = false;
+        musicInitialized = false;
+        usingYouTube = false;
+        refreshMusicUI();
+
+        // Pemutar YouTube tersembunyi tetap menjadi cadangan di desktop.
+        // Pada browser HP, utamakan tombol Play pada file MP3 agar izin sentuhan tidak hilang.
+        if (!isMobileMusicDevice && track.ytId && typeof startYouTubeStream === 'function') {
+            isPlaying = true;
+            usingYouTube = true;
+            setMusicHint('Mencoba pemutar musik alternatif...');
+            refreshMusicUI();
+            startYouTubeStream(track.ytId);
+        } else {
+            markMusicBlocked(error);
+        }
+    }
+
+    function playTrackFromBeginning(index) {
+        if (!Array.isArray(playlistData) || !playlistData.length) return;
+        const safeIndex = ((Number(index) || 0) % playlistData.length + playlistData.length) % playlistData.length;
+        currentTrackIdx = safeIndex;
+
+        if (typeof stopAllMusic === 'function') stopAllMusic();
+        if (audioEl) {
+            audioEl.pause();
+            try { audioEl.currentTime = 0; } catch (err) {}
+        }
+
+        const progress = document.getElementById('sp-progress-fill');
+        const currentTime = document.getElementById('sp-current-time');
+        if (progress) progress.style.width = '0%';
+        if (currentTime) currentTime.textContent = '0:00';
+
+        playTrackSource(playlistData[safeIndex], false);
+    }
+
+    // Fungsi playlist tetap bisa dipakai tombol Next, Previous, dan daftar lagu.
+    window.selectAndPlayTrack = playTrackFromBeginning;
+
+    // Lagu pertama (bukan lagu kedua) mulai dari detik 00:00 saat amplop pertama kali disentuh.
+    window.openMailbox = function () {
+        const mailboxEl = document.getElementById('mailbox');
+        if (mailboxEl) mailboxEl.classList.add('open');
+
+        if (!musicInitialized && !isPlaying) {
+            playTrackFromBeginning(FIRST_TRACK_INDEX);
+        }
+
+        setTimeout(() => {
+            if (typeof goTo === 'function') goTo('screen-pin');
+        }, 750);
+    };
+
+    // Tombol Play di layar Musik menjadi cara retry yang sah saat autoplay HP ditolak.
+    window.toggleMusic = function () {
+        if (isPlaying) {
+            wasPlayingBeforeGame = false;
+            if (typeof pauseActiveMusicOnly === 'function') pauseActiveMusicOnly();
+            setMusicHint('Musik Dijeda');
+            return;
+        }
+
+        if (usingYouTube && ytReady && ytPlayer) {
+            try {
+                isPlaying = true;
+                ytPlayer.playVideo();
+                setMusicHint('Memutar Musik Asli...');
+                refreshMusicUI();
+            } catch (error) {
+                markMusicBlocked(error);
+            }
+            return;
+        }
+
+        if (audioEl && audioEl.getAttribute('src')) {
+            // Melanjutkan dari posisi jeda. Jika sudah di ujung lagu, mulai lagi dari 00:00.
+            try {
+                if (audioEl.ended || (Number.isFinite(audioEl.duration) && audioEl.duration > 0 && audioEl.currentTime >= audioEl.duration)) {
+                    audioEl.currentTime = 0;
+                }
+            } catch (err) {}
+
+            let request;
+            try { request = audioEl.play(); }
+            catch (error) { markMusicBlocked(error); return; }
+
+            isPlaying = true;
+            refreshMusicUI();
+            if (request && typeof request.then === 'function') {
+                request.then(markMusicPlaying).catch(markMusicBlocked);
+            } else {
+                markMusicPlaying();
+            }
+            return;
+        }
+
+        playTrackFromBeginning(currentTrackIdx || FIRST_TRACK_INDEX);
+    };
+
+    // Siapkan tampilan playlist dengan lagu pertama terpilih sebelum pengguna membuka layar Musik.
+    currentTrackIdx = FIRST_TRACK_INDEX;
+    if (audioEl) {
+        audioEl.preload = 'auto';
+        audioEl.setAttribute('playsinline', '');
+    }
+    refreshMusicUI();
+    setMusicHint('Sentuh amplop untuk memulai musik. Jika belum terdengar, tekan Play di menu Musik.');
+})();
+
+// =========================================================================
+// END PERBAIKAN MUSIK HP
+// =========================================================================
+
+
+// =========================================================================
+// 104. FINAL FIX: ARAH JALAN 3D DI IPHONE + MUSIK MULAI DARI DETIK 00:00
+//      Tambahan ini mempertahankan seluruh fitur sebelumnya.
+// =========================================================================
+(function () {
+    // ---------- 3D LOVE MART: gerak maju/mundur mengikuti arah kamera ----------
+    // #bm-scene sudah diputar sesuai yaw kamera. Karena itu, translasi dunia
+    // harus memakai sumbu Z lokal saja; menghitung sin/cos yaw lagi membuat
+    // rotasi terhitung dua kali dan karakter tampak bergerak menyamping.
+    window.bmStepWalk = function (delta) {
+        const direction = Number(delta) >= 0 ? 1 : -1;
+        const stepSize = 75;
+        bmCamZ += direction * stepSize;
+        bmCamZ = Math.max(-650, Math.min(380, bmCamZ));
+        playWalkCycle();
+        updateTransform();
+    };
+
+    // Drag untuk memutar pandangan hanya dimulai dari area ruangan, bukan
+    // ketika jari menyentuh tombol Maju/Mundur, Back, rak, atau kontrol lain.
+    window.initDragLook = function () {
+        const viewport = document.getElementById('bm-viewport');
+        if (!viewport || viewport.dataset.bmPointerLookReady === '1') return;
+        viewport.dataset.bmPointerLookReady = '1';
+        viewport.style.touchAction = 'none';
+
+        const ignored = 'button, input, select, textarea, a, .bm-hud-controls, .bm-back-pill, .bm-char-btn, #bm-cart-bar, #bm-held-polaroid, .bm-modal-backdrop, .bm-product-box, .bm-counter-action';
+        let activePointerId = null;
+        let lastPointerX = 0;
+
+        viewport.addEventListener('pointerdown', function (event) {
+            if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (event.target && event.target.closest && event.target.closest(ignored)) return;
+            activePointerId = event.pointerId;
+            lastPointerX = event.clientX;
+            isDragging = true;
+            hasMoved = false;
+            try { viewport.setPointerCapture(event.pointerId); } catch (err) {}
+        }, { passive: true });
+
+        viewport.addEventListener('pointermove', function (event) {
+            if (!isDragging || activePointerId !== event.pointerId) return;
+            const deltaX = event.clientX - lastPointerX;
+            if (Math.abs(deltaX) > 2) {
+                hasMoved = true;
+                bmCamYaw += deltaX * 0.28;
+                lastPointerX = event.clientX;
+                updateTransform();
+            }
+        }, { passive: true });
+
+        function finishPointer(event) {
+            if (activePointerId === null) return;
+            if (event && event.pointerId !== undefined && event.pointerId !== activePointerId) return;
+            isDragging = false;
+            activePointerId = null;
+        }
+        viewport.addEventListener('pointerup', finishPointer, { passive: true });
+        viewport.addEventListener('pointercancel', finishPointer, { passive: true });
+        viewport.addEventListener('lostpointercapture', finishPointer, { passive: true });
+    };
+
+    // ---------- AUDIO: first track benar-benar mulai dari 00:00 ----------
+    const FIRST_TRACK_INDEX = 0;
+    let activeAudioTrack = false;
+    let startingTrack = false;
+    let activeAudioSources = [];
+
+    function setMusicMessage(message) {
+        const hint = document.getElementById('sp-status-hint');
+        if (hint) hint.textContent = message;
+    }
+
+    function updateMusicDisplay() {
+        if (typeof renderPlaylistUI === 'function') {
+            try { renderPlaylistUI(); } catch (err) { console.warn('Playlist UI:', err); }
+        }
+    }
+
+    function getAudioCandidates(track, trackIndex) {
+        let paths = [];
+        if (trackIndex === FIRST_TRACK_INDEX) {
+            // Variasi nama untuk mengakomodasi nama file lama dan perbedaan huruf
+            // besar/kecil pada server GitHub Pages (path bersifat case-sensitive).
+            paths = [
+                'audio/AnugerahTerindah.mp3',
+                'audio/AnugrahTerindah.mp3',
+                'audio/anugerahterindah.mp3',
+                'audio/anugrahterindah.mp3',
+                'audio/Anugerah_Terindah.mp3',
+                'audio/anugerah_terindah.mp3',
+                track.src,
+                track.altSrc
+            ];
+        } else {
+            paths = [track.src, track.altSrc];
+        }
+        return [...new Set(paths.filter(Boolean))];
+    }
+
+    function finishMusicStart(trackIndex) {
+        if (trackIndex !== currentTrackIdx) return;
+        startingTrack = false;
+        activeAudioTrack = true;
+        isPlaying = true;
+        musicInitialized = true;
+        usingYouTube = false;
+        wasPlayingBeforeGame = false;
+        setMusicMessage('Memutar ' + playlistData[trackIndex].title + ' dari 00:00');
+        updateMusicDisplay();
+    }
+
+    function musicStartFailed(error) {
+        startingTrack = false;
+        isPlaying = false;
+        musicInitialized = false;
+        activeAudioTrack = false;
+        updateMusicDisplay();
+        if (error && error.name === 'NotAllowedError') {
+            setMusicMessage('iPhone memerlukan sentuhan langsung. Buka Musik lalu tekan Play.');
+        } else {
+            setMusicMessage('File lagu tidak ditemukan/format tidak didukung. Periksa nama MP3 di folder audio.');
+        }
+    }
+
+    function playTrackAtZero(index) {
+        if (!Array.isArray(playlistData) || !playlistData.length || !audioEl) {
+            musicStartFailed(new Error('Pemutar audio atau playlist tidak ditemukan.'));
+            return;
+        }
+        const safeIndex = ((Number(index) || 0) % playlistData.length + playlistData.length) % playlistData.length;
+        const track = playlistData[safeIndex];
+        currentTrackIdx = safeIndex;
+        startingTrack = true;
+        activeAudioTrack = true;
+        isPlaying = true;
+        usingYouTube = false;
+
+        if (typeof stopAllMusic === 'function') stopAllMusic();
+        audioEl.pause();
+        audioEl.removeAttribute('src');
+        audioEl.replaceChildren();
+        audioEl.preload = 'auto';
+        audioEl.setAttribute('playsinline', '');
+        activeAudioSources = getAudioCandidates(track, safeIndex);
+
+        // Source list membuat browser mencoba nama file cadangan secara native;
+        // play() tetap dipanggil pada stack sentuhan pengguna di iPhone.
+        activeAudioSources.forEach(function (path) {
+            const source = document.createElement('source');
+            source.src = path;
+            source.type = 'audio/mpeg';
+            audioEl.appendChild(source);
+        });
+
+        const progress = document.getElementById('sp-progress-fill');
+        const current = document.getElementById('sp-current-time');
+        if (progress) progress.style.width = '0%';
+        if (current) current.textContent = '0:00';
+        updateMusicDisplay();
+
+        // load() me-reset waktu media ke awal. Tidak perlu menunggu event metadata
+        // sebelum play(), agar izin sentuhan iOS Safari tidak hilang.
+        audioEl.load();
+        try { audioEl.currentTime = 0; } catch (err) {}
+
+        let request;
+        try {
+            request = audioEl.play();
+        } catch (error) {
+            musicStartFailed(error);
+            return;
+        }
+        if (request && typeof request.then === 'function') {
+            request.then(function () {
+                finishMusicStart(safeIndex);
+            }).catch(musicStartFailed);
+        } else {
+            finishMusicStart(safeIndex);
+        }
+    }
+
+    // Pastikan posisi benar-benar 00:00 setiap kali lagu baru dimulai.
+    if (audioEl && !audioEl.dataset.bmMusicEventsReady) {
+        audioEl.dataset.bmMusicEventsReady = '1';
+        audioEl.addEventListener('loadedmetadata', function () {
+            if (startingTrack) {
+                try { audioEl.currentTime = 0; } catch (err) {}
+            }
+        });
+        audioEl.addEventListener('playing', function () {
+            if (startingTrack) finishMusicStart(currentTrackIdx);
+        });
+        audioEl.addEventListener('error', function () {
+            if (startingTrack) musicStartFailed(audioEl.error || new Error('Audio gagal dimuat.'));
+        });
+    }
+
+    window.selectAndPlayTrack = playTrackAtZero;
+    window.nextTrack = function () { playTrackAtZero((currentTrackIdx + 1) % playlistData.length); };
+    window.prevTrack = function () { playTrackAtZero((currentTrackIdx - 1 + playlistData.length) % playlistData.length); };
+
+    // Memanggil fungsi ini dari klik amplop (gesture pengguna) adalah titik awal
+    // pemutaran yang diizinkan iOS. Autoplay saat halaman baru dibuka tetap diblokir
+    // oleh kebijakan browser dan tidak bisa dipaksa oleh JavaScript.
+    window.openMailbox = function () {
+        const mailboxEl = document.getElementById('mailbox');
+        if (mailboxEl) mailboxEl.classList.add('open');
+        if (!musicInitialized && !isPlaying) playTrackAtZero(FIRST_TRACK_INDEX);
+        setTimeout(function () {
+            if (typeof goTo === 'function') goTo('screen-pin');
+        }, 750);
+    };
+
+    window.toggleMusic = function () {
+        if (isPlaying) {
+            wasPlayingBeforeGame = false;
+            if (typeof pauseActiveMusicOnly === 'function') pauseActiveMusicOnly();
+            isPlaying = false;
+            setMusicMessage('Musik dijeda');
+            updateMusicDisplay();
+            return;
+        }
+
+        if (usingYouTube && ytReady && ytPlayer) {
+            try {
+                isPlaying = true;
+                ytPlayer.playVideo();
+                setMusicMessage('Memutar Musik Asli...');
+                updateMusicDisplay();
+            } catch (error) { musicStartFailed(error); }
+            return;
+        }
+
+        if (activeAudioTrack && audioEl && activeAudioSources.length) {
+            let request;
+            try { request = audioEl.play(); }
+            catch (error) { musicStartFailed(error); return; }
+            if (request && typeof request.then === 'function') {
+                request.then(function () {
+                    isPlaying = true;
+                    musicInitialized = true;
+                    setMusicMessage('Melanjutkan ' + playlistData[currentTrackIdx].title);
+                    updateMusicDisplay();
+                }).catch(musicStartFailed);
+            } else {
+                isPlaying = true;
+                musicInitialized = true;
+                updateMusicDisplay();
+            }
+            return;
+        }
+
+        // Ketuk Play ketika lagu belum pernah berhasil dimuat: mulai lagu pertama.
+        playTrackAtZero(FIRST_TRACK_INDEX);
+    };
+
+    // Reset pilihan lagu ke track pertama untuk kunjungan baru; belum diputar
+    // sampai amplop disentuh agar sesuai aturan autoplay iPhone.
+    currentTrackIdx = FIRST_TRACK_INDEX;
+    if (audioEl) {
+        audioEl.pause();
+        audioEl.removeAttribute('src');
+        audioEl.replaceChildren();
+        audioEl.preload = 'auto';
+        audioEl.setAttribute('playsinline', '');
+    }
+    isPlaying = false;
+    musicInitialized = false;
+    activeAudioTrack = false;
+    updateMusicDisplay();
+    setMusicMessage('Lagu pertama siap. Sentuh amplop untuk memulai dari 00:00.');
+})();
+
+// =========================================================================
+// END FINAL FIX
 // =========================================================================
